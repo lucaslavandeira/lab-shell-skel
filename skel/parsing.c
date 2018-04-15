@@ -14,6 +14,7 @@ static char* get_token(char* buf, int idx) {
 		i++; idx++;
 	}
 
+    printf("DEBUG ALLOC'd  %s en %p\n", tok, (void*) tok);
 	return tok;
 }
 
@@ -96,9 +97,13 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 static char* expand_environ_var(char* arg) {
 	if (arg[0] == '$') {
 		char* env = getenv(arg + 1);
-		arg = realloc(arg, strlen(env) + 1);
-		memset(arg, 0, strlen(env) + 1);
-		strncpy(arg, env, strlen(env) + 1);
+		if (!env) {  // Expand into empty variable
+			env = "";
+		}
+		size_t len = strlen(env) + 1;
+		arg = realloc(arg, len);
+		memset(arg, 0, len);
+		strncpy(arg, env, len);
 	}
 	return arg;
 }
