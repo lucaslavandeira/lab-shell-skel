@@ -1,5 +1,7 @@
 #include "exec.h"
 
+void handle_exec(struct cmd* cmd);
+
 // sets the "key" argument with the key part of
 // the "arg" argument and null-terminates it
 static void get_environ_key(char* arg, char* key) {
@@ -62,8 +64,7 @@ void exec_cmd(struct cmd* cmd) {
 		case EXEC:
 			// spawns a command
 			//
-			// Your code here
-			printf("Commands are not yet implemented\n");
+			handle_exec(cmd);
 			_exit(-1);
 			break;
 
@@ -100,3 +101,13 @@ void exec_cmd(struct cmd* cmd) {
 	}
 }
 
+void handle_exec(struct cmd* cmd) {
+    struct execcmd* execcmd = (struct execcmd*) cmd;
+    for (int i = 0; i < execcmd->argc; ++i) {
+        if (execcmd->argv[i][0] == '$') {
+            execcmd->argv[i] = getenv(execcmd->argv[i] + 1);
+        }
+    }
+
+    execvp(execcmd->argv[0], execcmd->argv);
+}
