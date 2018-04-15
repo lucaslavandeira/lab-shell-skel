@@ -1,4 +1,5 @@
 #include "exec.h"
+#include "parsing.h"
 
 void handle_exec(struct cmd* cmd);
 
@@ -103,11 +104,5 @@ void exec_cmd(struct cmd* cmd) {
 
 void handle_exec(struct cmd* cmd) {
     struct execcmd* execcmd = (struct execcmd*) cmd;
-    for (int i = 0; i < execcmd->argc; ++i) {
-        if (execcmd->argv[i][0] == '$') {
-            execcmd->argv[i] = getenv(execcmd->argv[i] + 1);
-        }
-    }
-
     execvp(execcmd->argv[0], execcmd->argv);
 }
