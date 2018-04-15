@@ -5,7 +5,7 @@ Se muestra un diff de la función modificada, `exec_cmd`:
 ```diff
                 case EXEC:
                         // spawns a command
-                        //x
+                        //
 -                       // Your code here
 -                       printf("Commands are not yet implemented\n");
 +                       handle_exec(cmd);
