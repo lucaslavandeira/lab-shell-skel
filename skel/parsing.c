@@ -14,7 +14,6 @@ static char* get_token(char* buf, int idx) {
 		i++; idx++;
 	}
 
-    printf("DEBUG ALLOC'd  %s en %p\n", tok, (void*) tok);
 	return tok;
 }
 
