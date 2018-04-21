@@ -3,6 +3,8 @@
 int status = 0;
 struct cmd* parsed_pipe;
 
+void set_env_variables(struct execcmd* cmd);
+
 // runs the command in 'cmd'
 int run_cmd(char* cmd) {
 	
@@ -30,8 +32,9 @@ int run_cmd(char* cmd) {
 	parsed = parse_line(cmd);
 	
 	// forks and run the command
-	if ((p = fork()) == 0) {
-		
+	if ((p = fork()) != 0) {
+
+        set_env_variables((struct execcmd*) parsed);
 		// keep a reference
 		// to the parsed pipe cmd
 		// so it can be freed later
@@ -63,3 +66,26 @@ int run_cmd(char* cmd) {
 	return 0;
 }
 
+void set_env_variables(struct execcmd* cmd) {
+    for (int i = 0; i < cmd->eargc; ++i) {
+        char* value = NULL;
+        char name[ARGSIZE] = {0};
+        size_t name_len = 0;
+        for (int j = 0; j < strlen(cmd->eargv[i]); ++j) {
+            if (cmd->eargv[i][j] == '=') {
+                value = cmd->eargv[i] + j + 1;
+                name_len = j;
+                break;
+            }
+        }
+        if (!value) {
+            fprintf(stderr, "eargv without '=' found");
+            return;
+        }
+
+        strncpy(name, cmd->eargv[i], name_len);
+        if (setenv(name, value, 1) < 0) {
+            perror("setenv");
+        }
+    }
+}
