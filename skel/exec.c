@@ -2,7 +2,7 @@
 #include "parsing.h"
 
 void handle_exec(struct cmd* cmd);
-void handle_backk(struct cmd* cmd);
+void handle_back(struct cmd* cmd);
 
 
 // sets the "key" argument with the key part of
