@@ -6,6 +6,7 @@
 int exit_shell(char* cmd) {
     char command[ARGSIZE];
     if (sscanf(cmd, "%s", command) < 0) {
+        perror("exit sscanf");
         return 0;
     }
 
