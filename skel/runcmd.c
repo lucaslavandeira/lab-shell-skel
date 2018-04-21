@@ -3,7 +3,7 @@
 int status = 0;
 struct cmd* parsed_pipe;
 
-void set_env_variables(struct execcmd* cmd);
+void set_env_variables(struct cmd* base_cmd);
 
 // runs the command in 'cmd'
 int run_cmd(char* cmd) {
@@ -32,9 +32,9 @@ int run_cmd(char* cmd) {
 	parsed = parse_line(cmd);
 	
 	// forks and run the command
-	if ((p = fork()) != 0) {
+	if ((p = fork()) == 0) {
 
-        set_env_variables((struct execcmd*) parsed);
+        set_env_variables(parsed);
 		// keep a reference
 		// to the parsed pipe cmd
 		// so it can be freed later
@@ -54,7 +54,10 @@ int run_cmd(char* cmd) {
 	// - print info about it with 
 	// 	'print_back_info()'
 	//
-	// Your code here
+    if (parsed->type == BACK) {
+        print_back_info(parsed);
+        return 0;
+    }
 
 	// waits for the process to finish
 	waitpid(p, &status, 0);
@@ -66,7 +69,17 @@ int run_cmd(char* cmd) {
 	return 0;
 }
 
-void set_env_variables(struct execcmd* cmd) {
+void set_env_variables(struct cmd* base_cmd) {
+    struct execcmd* cmd = NULL;
+    if (base_cmd->type == EXEC) {
+        cmd = (struct execcmd*) base_cmd;
+    } else if (base_cmd->type == BACK) {
+        cmd = (struct execcmd*) ((struct backcmd*) base_cmd)->c;
+    } else {
+        fprintf(stderr, "Unrecognized type: %d\n", base_cmd->type);
+        return;
+    }
+
     for (int i = 0; i < cmd->eargc; ++i) {
         char* value = NULL;
         char name[ARGSIZE] = {0};
@@ -79,7 +92,7 @@ void set_env_variables(struct execcmd* cmd) {
             }
         }
         if (!value) {
-            fprintf(stderr, "eargv without '=' found");
+            fprintf(stderr, "eargv without '=' found\n");
             return;
         }
 

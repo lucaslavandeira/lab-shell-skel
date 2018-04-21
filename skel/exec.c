@@ -2,6 +2,8 @@
 #include "parsing.h"
 
 void handle_exec(struct cmd* cmd);
+void handle_backk(struct cmd* cmd);
+
 
 // sets the "key" argument with the key part of
 // the "arg" argument and null-terminates it
@@ -72,8 +74,7 @@ void exec_cmd(struct cmd* cmd) {
 		case BACK: {
 			// runs a command in background
 			//
-			// Your code here
-			printf("Background process are not yet implemented\n");
+            handle_back(cmd);
 			_exit(-1);
 			break;
 		}
@@ -105,4 +106,12 @@ void exec_cmd(struct cmd* cmd) {
 void handle_exec(struct cmd* cmd) {
     struct execcmd* execcmd = (struct execcmd*) cmd;
     execvp(execcmd->argv[0], execcmd->argv);
+}
+
+
+void handle_back(struct cmd* cmd) {
+    struct backcmd* back = (struct backcmd*) cmd;
+    struct execcmd* execcmd = (struct execcmd*) back->c;
+    execvp(execcmd->argv[0], execcmd->argv);
+
 }
