@@ -34,7 +34,7 @@ int cd(char* cmd) {
     }
 
     if (!strlen(dir)) {
-        memcpy(dir, getenv("HOME"), ARGSIZE);
+        strncpy(dir, getenv("HOME"), ARGSIZE);
     }
 
 	if (chdir(dir) < 0) {
