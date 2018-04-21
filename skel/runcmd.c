@@ -56,6 +56,7 @@ int run_cmd(char* cmd) {
 	//
     if (parsed->type == BACK) {
         print_back_info(parsed);
+        free_command(parsed);
         return 0;
     }
 
