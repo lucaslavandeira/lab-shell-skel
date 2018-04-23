@@ -1,10 +1,13 @@
 #include "exec.h"
 #include "parsing.h"
 
+#define FILE_PERMISSIONS 0664
+
+
 void handle_exec(struct cmd* cmd);
 void handle_back(struct cmd* cmd);
 
-
+void handle_redir(struct cmd* cmd);
 // sets the "key" argument with the key part of
 // the "arg" argument and null-terminates it
 static void get_environ_key(char* arg, char* key) {
@@ -82,8 +85,7 @@ void exec_cmd(struct cmd* cmd) {
 		case REDIR: {
 			// changes the input/output/stderr flow
 			//
-			// Your code here
-			printf("Redirections are not yet implemented\n");
+            handle_redir(cmd);
 			_exit(-1);
 			break;
 		}
@@ -113,5 +115,44 @@ void handle_back(struct cmd* cmd) {
     struct backcmd* back = (struct backcmd*) cmd;
     struct execcmd* execcmd = (struct execcmd*) back->c;
     execvp(execcmd->argv[0], execcmd->argv);
+}
 
+
+void handle_redir(struct cmd* cmd) {
+    struct execcmd* execcmd = (struct execcmd*) cmd;
+
+	int in_fd = STDIN_FILENO;
+	int out_fd = STDOUT_FILENO;
+	int err_fd = STDERR_FILENO;
+	if (strncmp(execcmd->in_file, "", strlen(execcmd->in_file)) != 0) {
+		in_fd = open(execcmd->in_file, O_RDONLY);
+		if (in_fd < 0) {
+			perror("redit in_file open");
+			return;
+		}
+	}
+
+	if (strncmp(execcmd->out_file, "", strlen(execcmd->out_file)) != 0) {
+		out_fd = open(execcmd->out_file, O_CREAT | O_TRUNC | O_WRONLY, FILE_PERMISSIONS);
+		if (out_fd < 0) {
+			perror("redir out_file open");
+			return;
+		}
+	}
+
+	if (strncmp(execcmd->err_file, "", strlen(execcmd->err_file)) != 0) {
+		if (strncmp(execcmd->err_file, "&1", strlen(execcmd->err_file)) == 0) {
+			err_fd = STDOUT_FILENO;
+		} else {
+			err_fd = open(execcmd->err_file, O_CREAT | O_TRUNC | O_WRONLY, FILE_PERMISSIONS);
+			if (err_fd < 0) {
+				perror("redir err_file open");
+				return;
+			}
+		}
+	}
+	dup2(in_fd, STDIN_FILENO);
+    dup2(out_fd, STDOUT_FILENO);
+	dup2(err_fd, STDERR_FILENO);
+    handle_exec(cmd);
 }
