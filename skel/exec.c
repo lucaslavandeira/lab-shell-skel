@@ -6,41 +6,8 @@
 
 void handle_exec(struct cmd* cmd);
 void handle_back(struct cmd* cmd);
-
 void handle_redir(struct cmd* cmd);
-// sets the "key" argument with the key part of
-// the "arg" argument and null-terminates it
-static void get_environ_key(char* arg, char* key) {
-
-	int i;
-	for (i = 0; arg[i] != '='; i++)
-		key[i] = arg[i];
-
-	key[i] = END_STRING;
-}
-
-// sets the "value" argument with the value part of
-// the "arg" argument and null-terminates it
-static void get_environ_value(char* arg, char* value, int idx) {
-
-	int i, j;
-	for (i = (idx + 1), j = 0; i < strlen(arg); i++, j++)
-		value[j] = arg[i];
-
-	value[j] = END_STRING;
-}
-
-// sets the environment variables passed
-// in the command line
-//
-// Hints:
-// - use 'block_contains()' to
-// 	get the index where the '=' is
-// - 'get_environ_*()' can be useful here
-static void set_environ_vars(char** eargv, int eargc) {
-
-	// Your code here
-} 
+void handle_pipe(struct cmd* cmd) ;
 
 // opens the file in which the stdin/stdout or
 // stderr flow will be redirected, and returns
@@ -53,9 +20,12 @@ static void set_environ_vars(char** eargv, int eargc) {
 // - if O_CREAT is used, add S_IWUSR and S_IRUSR
 // 	to make it a readable normal file
 static int open_redir_fd(char* file) {
-
-	// Your code here
-	return -1;
+    int fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, FILE_PERMISSIONS); // NOLINT
+    if (fd < 0) {
+        perror("redir out_file open");
+        return -1;
+    }
+    return fd;
 }
 
 // executes a command - does not return
@@ -72,14 +42,12 @@ void exec_cmd(struct cmd* cmd) {
 			//
 			handle_exec(cmd);
 			_exit(-1);
-			break;
 
 		case BACK: {
 			// runs a command in background
 			//
             handle_back(cmd);
 			_exit(-1);
-			break;
 		}
 
 		case REDIR: {
@@ -87,22 +55,18 @@ void exec_cmd(struct cmd* cmd) {
 			//
             handle_redir(cmd);
 			_exit(-1);
-			break;
 		}
 		
 		case PIPE: {
 			// pipes two commands
 			//
-			// Your code here
-			printf("Pipes are not yet implemented\n");
-				
+			handle_pipe(cmd);
 			// free the memory allocated
 			// for the pipe tree structure
 			free_command(parsed_pipe);
-
-			break;
 		}
-	}
+        default:break;
+    }
 }
 
 void handle_exec(struct cmd* cmd) {
@@ -133,10 +97,9 @@ void handle_redir(struct cmd* cmd) {
 	}
 
 	if (strncmp(execcmd->out_file, "", strlen(execcmd->out_file)) != 0) {
-		out_fd = open(execcmd->out_file, O_CREAT | O_TRUNC | O_WRONLY, FILE_PERMISSIONS);
+		out_fd = open_redir_fd(execcmd->out_file);
 		if (out_fd < 0) {
-			perror("redir out_file open");
-			return;
+            return;
 		}
 	}
 
@@ -144,10 +107,9 @@ void handle_redir(struct cmd* cmd) {
 		if (strncmp(execcmd->err_file, "&1", strlen(execcmd->err_file)) == 0) {
 			err_fd = STDOUT_FILENO;
 		} else {
-			err_fd = open(execcmd->err_file, O_CREAT | O_TRUNC | O_WRONLY, FILE_PERMISSIONS);
+			err_fd = open_redir_fd(execcmd->err_file);
 			if (err_fd < 0) {
-				perror("redir err_file open");
-				return;
+			    return;
 			}
 		}
 	}
@@ -155,4 +117,25 @@ void handle_redir(struct cmd* cmd) {
     dup2(out_fd, STDOUT_FILENO);
 	dup2(err_fd, STDERR_FILENO);
     handle_exec(cmd);
+}
+
+void handle_pipe(struct cmd* cmd) {
+	struct pipecmd* pipecmd = (struct pipecmd*) cmd;
+	int pipefds[2] = {0};
+
+	if (pipe(pipefds) < 0) {
+		perror("pipecmd: error creating pipe");
+		return;
+	}
+
+	pid_t first;
+	if ((first = fork()) == 0) {
+		dup2(pipefds[1], STDOUT_FILENO);
+		exec_cmd(pipecmd->leftcmd);
+	} else {
+	    waitpid(first, 0, 0);
+		dup2(pipefds[0], STDIN_FILENO);
+		close(pipefds[1]);
+		exec_cmd(pipecmd->rightcmd);
+	}
 }
