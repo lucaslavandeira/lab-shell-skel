@@ -67,6 +67,7 @@ el mensaje de error de que el archivo `noexiste` no fue encontrado.
 El efecto de esto comparando con el inciso anterior es que toda salida fue redireccionada al mismo archivo.
 
 >Challenge: investigar, describir y agregar la funcionalidad del operador de redirección >> y &>
+
 El operador `>>` hace un _append_ de la salida del comando a un archivo destino, es decir, no se trunca el archivo antes de escribir.
 `&>` es equivalente a `2>&1` seguido de una redirección `>`, es decir, se redirigen tanto salida de estándar como de error al mismo archivo.
 La implementación de `>>` puede ser vista en el código anterior, mientras que la funcionalidad de `&>` fue implementada modificando
