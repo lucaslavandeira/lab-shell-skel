@@ -91,7 +91,7 @@ void handle_redir(struct cmd* cmd) {
 	if (strncmp(execcmd->in_file, "", strlen(execcmd->in_file)) != 0) {
 		in_fd = open(execcmd->in_file, O_RDONLY);
 		if (in_fd < 0) {
-			perror("redit in_file open");
+			perror("redir in_file open");
 			return;
 		}
 	}
