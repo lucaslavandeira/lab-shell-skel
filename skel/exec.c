@@ -97,9 +97,14 @@ void handle_redir(struct cmd* cmd) {
 	}
 
 	if (strncmp(execcmd->out_file, "", strlen(execcmd->out_file)) != 0) {
-		out_fd = open_redir_fd(execcmd->out_file);
+		if (execcmd->out_file[0] == '>') {  // append
+			out_fd = open(execcmd->out_file + 1, O_CREAT | O_APPEND | O_WRONLY, FILE_PERMISSIONS); // NOLINT
+		} else {
+			out_fd = open_redir_fd(execcmd->out_file);
+		}
+
 		if (out_fd < 0) {
-            return;
+			return;
 		}
 	}
 
