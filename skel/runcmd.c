@@ -32,7 +32,7 @@ int run_cmd(char* cmd) {
 	parsed = parse_line(cmd);
 	
 	// forks and run the command
-	if ((p = fork()) != 0) {
+	if ((p = fork()) == 0) {
 
         set_env_variables(parsed);
 		// keep a reference
@@ -76,6 +76,10 @@ void set_env_variables(struct cmd* base_cmd) {
         cmd = (struct execcmd*) base_cmd;
     } else if (base_cmd->type == BACK) {
         cmd = (struct execcmd*) ((struct backcmd*) base_cmd)->c;
+    } else if (base_cmd->type == PIPE) {
+        set_env_variables(((struct pipecmd*) base_cmd)->leftcmd);
+        set_env_variables(((struct pipecmd*) base_cmd)->rightcmd);
+        return;
     } else {
         fprintf(stderr, "Unrecognized type: %d\n", base_cmd->type);
         return;
