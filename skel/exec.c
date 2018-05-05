@@ -141,6 +141,12 @@ void handle_pipe(struct cmd* cmd) {
 	    waitpid(first, 0, 0);
 		dup2(pipefds[0], STDIN_FILENO);
 		close(pipefds[1]);
-		exec_cmd(pipecmd->rightcmd);
+        if (strstr(pipecmd->rightcmd->scmd, "|") != NULL) {
+            struct cmd* new = parse_line(pipecmd->rightcmd->scmd);
+            handle_pipe(new);
+        } else {
+		    exec_cmd(pipecmd->rightcmd);
+        }
 	}
+
 }
