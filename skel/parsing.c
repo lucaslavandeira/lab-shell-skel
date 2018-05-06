@@ -1,4 +1,5 @@
 #include "parsing.h"
+#include "printstatus.h"
 
 // parses an argument of the command stream input
 static char* get_token(char* buf, int idx) {
@@ -95,6 +96,11 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 // 	 to 'arg' 
 static char* expand_environ_var(char* arg) {
 	if (arg[0] == '$') {
+	    if (arg[1] == '?') {
+	         memset(arg, 0, strlen(arg));
+	         snprintf(arg, 4, "%d", status);
+	         return arg;
+	    }
 		char* env = getenv(arg + 1);
 		if (!env) {  // Expand into empty variable
 			env = "";
