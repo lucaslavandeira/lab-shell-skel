@@ -4,6 +4,8 @@
 #include "runcmd.h"
 
 char promt[PRMTLEN] = {0};
+pid_t background_process = 0;
+char background_prompt[PRMTLEN] = {0};
 
 // runs a shell command
 static void run_shell() {
@@ -30,7 +32,24 @@ static void init_shell() {
 	}	
 }
 
+void background_process_notify(int sig) {
+    if (background_process) {
+        printf("terminado: PID=%d (%s)\n", background_process, background_prompt);
+    }
+    background_process = 0;
+    memset(background_prompt, 0, PRMTLEN);
+}
+
+void add_handler() {
+    struct sigaction s;
+    memset(&s, 0, sizeof(s));
+    s.sa_flags = SA_SIGINFO | SA_RESTART;
+    s.sa_handler = background_process_notify;
+    sigaction(SIGCHLD, &s, NULL);
+}
+
 int main(void) {
+    add_handler();
 
 	init_shell();
 

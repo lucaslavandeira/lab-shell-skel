@@ -1,5 +1,7 @@
 #include "runcmd.h"
 
+extern int background_process;
+extern char background_prompt[PRMTLEN];
 int status = 0;
 struct cmd* parsed_pipe;
 
@@ -55,6 +57,8 @@ int run_cmd(char* cmd) {
 	// 	'print_back_info()'
 	//
     if (parsed->type == BACK) {
+        strcpy(background_prompt, parsed->scmd);
+        background_process = p;
         print_back_info(parsed);
         free_command(parsed);
         return 0;
